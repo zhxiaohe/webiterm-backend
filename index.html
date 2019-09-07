@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>ASCIINEMA DEMO</title>
+    <link href="static/asciinema-player.css" rel="stylesheet">
+</head>
+<body>
+    <script>
+    a = document.URL
+    filename = a.split('?')[1].split("=")[1]
+    path = '/action/' + filename
+    document.write('<asciinema-player src="'+path+ '"></asciinema-player>')
+    </script>
+    <script src="static/asciinema-player.js"></script>
+</body>
+</html>
