@@ -16,6 +16,7 @@ import json
 import struct
 import time
 import datetime
+from tornado.web import Application, RequestHandler
 
 
 
@@ -37,7 +38,7 @@ define('port', default=9008, help='listen port', type=int)
 
 from cryptography.fernet import Fernet
 
-
+##  key = base64.urlsafe_b64encode(os.urandom(32))  生成key
 
 
 
@@ -92,9 +93,8 @@ class Worker(object):
         self.username = username
         self.t = time.time()
         self.ptynum = 1
-        self.filename = 'action/{user}_{ssh}_{id}_{t}.cast'.format(user=self.username, ssh=self.sshid, id=self.id,
+        self.filename = 'static/action/{user}_{ssh}_{id}_{t}.cast'.format(user=self.username, ssh=self.sshid, id=self.id,
                                                         t=time.strftime("%Y-%m-%d--%H-%M-%S", time.localtime(self.t)))
-        # self.actionplay = ActionLogger(filename=self.filename)
 
     def __call__(self, fd, events):
         if events & IOLoop.READ:
@@ -117,7 +117,6 @@ class Worker(object):
         logging.debug('worker {} on read'.format(self.id))
         try:
             data = self.chan.recv(BUF_SIZE)
-            t = round(time.time() - self.t, 6)
             with open(self.filename, "a") as f:
                 f.write(json.dumps([str(t), "o", data.decode()]) + "\n")
                 f.close()
@@ -133,6 +132,8 @@ class Worker(object):
 
             logging.debug('"{}" to {}'.format(data, self.handler.src_addr))
             try:
+                # print("read:",type(data))
+                # self.handler.write_message(data.decode("utf8"))
                 self.handler.write_message(data, binary=True)
             except tornado.websocket.WebSocketClosedError:
                 self.close()
@@ -348,6 +349,10 @@ class IndexHandler(tornado.web.RequestHandler):
     def options(self):
         pass
 
+class S(RequestHandler):
+    def get(self):
+        self.render("index.html")
+
 class WsockHandler(tornado.websocket.WebSocketHandler):
 
     def __init__(self, *args, **kwargs):
@@ -447,7 +452,7 @@ class IndexHandlerAction(tornado.web.RequestHandler):
 
     def post(self):
         data = []
-        for i in os.listdir('action'):
+        for i in os.listdir('static/action'):
             date = i.split('--')[0].split('_')[-1]
             data.append({'username': i.split('_')[0], 'play': i, 'datetime': date})
         self.write({'data': data})
@@ -466,6 +471,7 @@ def main():
 
     handlers = [
         (r'/',   IndexHandler),
+        (r'/S', S),
         (r'/action', IndexHandlerAction),
         (r'/ws', WsockHandler)
     ]
